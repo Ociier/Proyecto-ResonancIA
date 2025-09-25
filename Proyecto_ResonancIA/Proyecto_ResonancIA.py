@@ -1,8 +1,14 @@
 import reflex as rx
 import asyncio
 import os
-import logging
 
+import torch
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model = model.to(device)
+
+
+import logging
+from torchvision.models.video import r3d_18
 from rxconfig import config
 
 UPLOAD_ID = "image_upload"
