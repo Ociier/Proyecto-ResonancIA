@@ -1,17 +1,70 @@
 import reflex as rx
 import asyncio
 import os
-
+from PIL import Image
+import numpy as np
 import torch
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = model.to(device)
-
-
-import logging
+import torch.nn as nn
+import nibabel as nib
+from torchvision import transforms
 from torchvision.models.video import r3d_18
+import logging
 from rxconfig import config
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# Cargar el modelo ResNet-18
+model = r3d_18(pretrained=False)  
+model.fc = nn.Linear(model.fc.in_features, 4)  # 4 clases: Control, Leve, Moderado, Severo
+model = model.to(device)
+
 UPLOAD_ID = "image_upload"
+
+# Función para cargar imágenes NIfTI
+def load_nifti_image(file_path):
+    img = nib.load(file_path)  # Cargar imagen NIfTI
+    data = img.get_fdata()  # Obtener los datos como numpy array
+
+    data = np.expand_dims(data, axis=0)  # Añadir la dimensión del batch
+    data = torch.tensor(data, dtype=torch.float32).unsqueeze(1)  # Convertir a tensor 3D
+
+    # Redimensionar la imagen (si es necesario)
+    transform = transforms.Compose([
+        transforms.Resize((64, 64, 64)),  # Redimensionar a tamaño adecuado
+    ])
+    data = transform(data).to(device)
+    return data
+
+# Función para cargar imágenes TGA
+def load_tga_image(file_path):
+    image = Image.open(file_path)  # Abrir imagen TGA
+    data = np.array(image)  # Convertir a numpy array
+
+    data = np.expand_dims(data, axis=2)  # Añadir dimensión de "profundidad"
+    data = np.expand_dims(data, axis=0)  # Añadir dimensión del batch
+
+    # Convertir a tensor 3D
+    data = torch.tensor(data, dtype=torch.float32).unsqueeze(1).to(device)
+    return data
+
+# Función de inferencia
+def predict_image(file_path):
+    # Preprocesar la imagen
+    if file_path.endswith('.nii') or file_path.endswith('.nii.gz'):
+        image = load_nifti_image(file_path)  # Para archivos NIfTI
+    elif file_path.endswith('.tga'):
+        image = load_tga_image(file_path)  # Para archivos TGA
+    else:
+        raise ValueError("Unsupported file format")
+
+    model.eval()  # Poner el modelo en modo de evaluación
+    with torch.no_grad():
+        output = model(image)  # Pasar la imagen al modelo
+        _, predicted_class = torch.max(output, 1)  # Obtener la clase predicha
+
+    class_names = ['Control', 'Leve', 'Moderado', 'Severo']
+    predicted_label = class_names[predicted_class.item()]
+    return predicted_label
 
 class ImageUploadState(rx.State):
     """Manages the state for the image uploader application."""
@@ -23,7 +76,7 @@ class ImageUploadState(rx.State):
     @rx.event
     async def handle_upload(self, files: list[rx.UploadFile]):
         """
-        Handles the file upload process.
+        Handles the file upload process and inference for Alzheimer's detection.
 
         Args:
             files: A list of files to be uploaded.
@@ -31,6 +84,7 @@ class ImageUploadState(rx.State):
         if not files:
             yield rx.toast.error("Please select at least one image to upload.")
             return
+
         self.is_uploading = True
         yield
         for i, file in enumerate(files):
@@ -39,8 +93,14 @@ class ImageUploadState(rx.State):
                 file_path = rx.get_upload_dir() / file.name
                 with file_path.open("wb") as f:
                     f.write(upload_data)
+
                 if file.name not in self.uploaded_images:
                     self.uploaded_images.append(file.name)
+
+                # Realizar la predicción con el modelo
+                predicted_class = predict_image(file_path)  # Llamar a la función de predicción
+                yield rx.toast.success(f"Predicción para {file.name}: {predicted_class}")
+
                 self.upload_progress = int((i + 1) / len(files) * 100)
                 await asyncio.sleep(0.1)
                 yield
@@ -85,13 +145,13 @@ def upload_component() -> rx.Component:
                     class_name="mt-4 text-base font-semibold text-gray-700",
                 ),
                 rx.el.p(
-                    "Supports: .png, .jpg, .jpeg",
+                    "Supports: .png, .jpg, .jpeg, .nii, .nii.gz, .tga",
                     class_name="mt-1 text-sm text-gray-500",
                 ),
                 class_name="flex flex-col items-center justify-center p-8 sm:p-12 border-2 border-dashed border-gray-300 rounded-2xl bg-gray-50 hover:bg-blue-50 transition-colors duration-300 cursor-pointer",
             ),
             id=UPLOAD_ID,
-            accept={"image/png": [".png"], "image/jpeg": [".jpg", ".jpeg"]},
+            accept={"image/png": [".png"], "image/jpeg": [".jpg", ".jpeg"], "image/nifti": [".nii", ".nii.gz"], "image/tga": [".tga"]},
             multiple=True,
             max_files=10,
             class_name="w-full",
@@ -231,7 +291,6 @@ def index() -> rx.Component:
             min_height="85vh",
         ),
     )
-
 
 app = rx.App()
 app.add_page(index)

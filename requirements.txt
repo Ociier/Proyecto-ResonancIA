@@ -1,2 +1,6 @@
-
-reflex==0.8.12
+torch==1.13.0
+torchvision==0.14.0
+flask==2.1.1
+nibabel==3.2.2
+Pillow==9.1.1
+reflex==0.3.10
