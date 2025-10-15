@@ -1,80 +1,20 @@
 import reflex as rx
-import asyncio
 import os
-from PIL import Image
-import numpy as np
-import torch
-import torch.nn as nn
-import nibabel as nib
-from torchvision import transforms
-from torchvision.models.video import r3d_18
 import logging
+import requests  # Usamos requests para enviar imágenes al back-end Flask
 from rxconfig import config
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-# Cargar el modelo ResNet-18
-model = r3d_18(pretrained=False)  
-model.fc = nn.Linear(model.fc.in_features, 4)  # 4 clases: Control, Leve, Moderado, Severo
-model = model.to(device)
 
 UPLOAD_ID = "image_upload"
 
-# Función para cargar imágenes NIfTI
-def load_nifti_image(file_path):
-    img = nib.load(file_path)  # Cargar imagen NIfTI
-    data = img.get_fdata()  # Obtener los datos como numpy array
-
-    data = np.expand_dims(data, axis=0)  # Añadir la dimensión del batch
-    data = torch.tensor(data, dtype=torch.float32).unsqueeze(1)  # Convertir a tensor 3D
-
-    # Redimensionar la imagen (si es necesario)
-    transform = transforms.Compose([
-        transforms.Resize((64, 64, 64)),  # Redimensionar a tamaño adecuado
-    ])
-    data = transform(data).to(device)
-    return data
-
-# Función para cargar imágenes TGA
-def load_tga_image(file_path):
-    image = Image.open(file_path)  # Abrir imagen TGA
-    data = np.array(image)  # Convertir a numpy array
-
-    data = np.expand_dims(data, axis=2)  # Añadir dimensión de "profundidad"
-    data = np.expand_dims(data, axis=0)  # Añadir dimensión del batch
-
-    # Convertir a tensor 3D
-    data = torch.tensor(data, dtype=torch.float32).unsqueeze(1).to(device)
-    return data
-
-# Función de inferencia
-def predict_image(file_path):
-    # Preprocesar la imagen
-    if file_path.endswith('.nii') or file_path.endswith('.nii.gz'):
-        image = load_nifti_image(file_path)  # Para archivos NIfTI
-    elif file_path.endswith('.tga'):
-        image = load_tga_image(file_path)  # Para archivos TGA
-    else:
-        raise ValueError("Unsupported file format")
-
-    model.eval()  # Poner el modelo en modo de evaluación
-    with torch.no_grad():
-        output = model(image)  # Pasar la imagen al modelo
-        _, predicted_class = torch.max(output, 1)  # Obtener la clase predicha
-
-    class_names = ['Control', 'Leve', 'Moderado', 'Severo']
-    predicted_label = class_names[predicted_class.item()]
-    return predicted_label
-
 class ImageUploadState(rx.State):
     """Manages the state for the image uploader application."""
-
-    uploaded_images: list[str] = []
-    is_uploading: bool = False
-    upload_progress: int = 0
+    uploaded_images = []  # Usamos list de manera estándar
+    is_uploading = False
+    upload_progress = 0
+    prediction = ""  # Para mostrar la predicción del modelo
 
     @rx.event
-    async def handle_upload(self, files: list[rx.UploadFile]):
+    def handle_upload(self, files):  # Usamos función síncrona en vez de async
         """
         Handles the file upload process and inference for Alzheimer's detection.
 
@@ -89,7 +29,7 @@ class ImageUploadState(rx.State):
         yield
         for i, file in enumerate(files):
             try:
-                upload_data = await file.read()
+                upload_data = file.read()
                 file_path = rx.get_upload_dir() / file.name
                 with file_path.open("wb") as f:
                     f.write(upload_data)
@@ -97,12 +37,19 @@ class ImageUploadState(rx.State):
                 if file.name not in self.uploaded_images:
                     self.uploaded_images.append(file.name)
 
-                # Realizar la predicción con el modelo
-                predicted_class = predict_image(file_path)  # Llamar a la función de predicción
-                yield rx.toast.success(f"Predicción para {file.name}: {predicted_class}")
+                # Enviar la imagen al back-end Flask para la predicción
+                response = requests.post(
+                    "http://localhost:5000/upload",  # URL del back-end Flask
+                    files={"file": open(file_path, "rb")}
+                )
+
+                if response.status_code == 200:
+                    self.prediction = response.json().get("prediction", "No prediction")
+                    yield rx.toast.success(f"Prediction for {file.name}: {self.prediction}")
+                else:
+                    yield rx.toast.error(f"Failed to get prediction for {file.name}")
 
                 self.upload_progress = int((i + 1) / len(files) * 100)
-                await asyncio.sleep(0.1)
                 yield
             except Exception as e:
                 logging.exception(f"Error uploading {file.name}: {e}")
@@ -114,7 +61,7 @@ class ImageUploadState(rx.State):
         yield rx.toast.success(f"Successfully uploaded {len(files)} image(s)!")
 
     @rx.event
-    def delete_image(self, filename: str):
+    def delete_image(self, filename):
         """
         Deletes a specific uploaded image.
 
@@ -221,55 +168,6 @@ def upload_component() -> rx.Component:
         class_name="w-full max-w-2xl mx-auto flex flex-col items-center",
     )
 
-def gallery_component() -> rx.Component:
-    """Displays the gallery of uploaded images."""
-    return rx.el.div(
-        rx.cond(
-            ImageUploadState.uploaded_images.length() > 0,
-            rx.el.div(
-                rx.el.h2(
-                    "Your Uploaded Images",
-                    class_name="text-2xl font-bold text-gray-800 mb-6",
-                ),
-                rx.el.div(
-                    rx.foreach(ImageUploadState.uploaded_images, image_card),
-                    class_name="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4",
-                ),
-                class_name="w-full",
-            ),
-            rx.el.div(
-                rx.icon("image-off", class_name="w-20 h-20 text-gray-300"),
-                rx.el.p(
-                    "No images uploaded yet.",
-                    class_name="mt-4 text-lg font-medium text-gray-500",
-                ),
-                class_name="w-full flex flex-col items-center justify-center p-16 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200",
-            ),
-        ),
-        class_name="w-full max-w-6xl mx-auto mt-12",
-    )
-
-def image_card(filename: str) -> rx.Component:
-    """A card that displays an image and a delete button."""
-    return rx.el.div(
-        rx.el.image(
-            src=rx.get_upload_url(filename),
-            alt=f"Uploaded image: {filename}",
-            class_name="aspect-square w-full object-cover rounded-lg transition-transform duration-300 group-hover:scale-105",
-        ),
-        rx.el.div(
-            rx.el.p(filename, class_name="text-xs font-medium text-gray-700 truncate"),
-            class_name="absolute bottom-0 left-0 right-0 p-2 bg-white/70 backdrop-blur-sm rounded-b-lg",
-        ),
-        rx.el.button(
-            rx.icon("x", class_name="w-4 h-4"),
-            on_click=lambda: ImageUploadState.delete_image(filename),
-            class_name="absolute top-2 right-2 p-1.5 bg-black/40 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-red-500 hover:scale-110",
-            aria_label="Delete image",
-        ),
-        class_name="relative group overflow-hidden rounded-xl shadow-md border border-gray-200/50 hover:shadow-xl transition-shadow duration-300",
-    )
-
 def index() -> rx.Component:
     return rx.container(
         rx.color_mode.button(position="top-right"),
@@ -280,12 +178,6 @@ def index() -> rx.Component:
                 size="5",
             ),
             rx.el.div(upload_component(), class_name="mt-10"),
-            gallery_component(),
-            rx.link(
-                rx.button("Test"),
-                href="https://reflex.dev/docs/getting-started/introduction/",
-                is_external=True,
-            ),
             spacing="5",
             justify="center",
             min_height="85vh",

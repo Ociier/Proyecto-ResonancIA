@@ -1,10 +1,8 @@
 {
   "ExpandedNodes": [
     "",
-    "\\assets",
-    "\\Proyecto_ResonancIA",
-    "\\uploaded_files"
+    "\\Proyecto_ResonancIA"
   ],
-  "SelectedNode": "\\rxconfig.py",
+  "SelectedNode": "\\requirements.txt",
   "PreviewInSolutionExplorer": false
 }

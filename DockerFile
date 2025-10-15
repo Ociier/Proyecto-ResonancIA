@@ -4,7 +4,7 @@ FROM python:3.8-slim
 # Establece el directorio de trabajo dentro del contenedor
 WORKDIR /app
 
-# Copia solo el archivo requirements.txt primero para aprovechar la caché de Docker
+# Copia el archivo requirements.txt primero
 COPY requirements.txt /app/
 
 # Instala las dependencias necesarias desde requirements.txt
@@ -13,11 +13,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copia el resto de los archivos del proyecto al contenedor
 COPY . /app
 
-# Establece PYTHONPATH para incluir el directorio actual (donde está rxconfig.py)
-ENV PYTHONPATH=/app
-
-# Expón el puerto 5000 si tu aplicación lo usa
+# Expón el puerto 5000
 EXPOSE 5000
 
-# Establece el comando para ejecutar tu aplicación
-CMD ["python", "-m", "Proyecto_ResonancIA.Proyecto_ResonancIA"]
+# Establece el comando para ejecutar tu aplicación Reflex
+CMD ["python", "Proyecto_ResonancIA/Proyecto_ResonancIA.py"]
