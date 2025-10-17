@@ -1,6 +1,12 @@
+flask==2.2.5
+flask-cors==4.0.0
 torch==1.13.0
 torchvision==0.14.0
-flask==2.1.1
-nibabel==3.2.2
-Pillow==9.1.1
-reflex==0.3.10
+numpy==1.24.4
+pydicom==2.4.4
+pylibjpeg==2.0.1
+pylibjpeg-libjpeg==2.2.0
+pylibjpeg-openjpeg==2.3.0
+nibabel==5.2.1
+Pillow==10.2.0
+pydicom==2.4.4

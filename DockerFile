@@ -1,20 +1,18 @@
-# Usa una imagen base con Python
-FROM python:3.8-slim
+# Backend sólo (Flask + PyTorch CPU)
+FROM python:3.10-slim
 
-# Establece el directorio de trabajo dentro del contenedor
+# Dependencias del sistema para JPEG/JP2 (útil para DICOM comprimido)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libjpeg62-turbo libopenjp2-7 gcc \
+ && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
-# Copia el archivo requirements.txt primero
 COPY requirements.txt /app/
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
-# Instala las dependencias necesarias desde requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+COPY app.py /app/
 
-# Copia el resto de los archivos del proyecto al contenedor
-COPY . /app
-
-# Expón el puerto 5000
 EXPOSE 5000
-
-# Establece el comando para ejecutar tu aplicación Reflex
-CMD ["python", "Proyecto_ResonancIA/Proyecto_ResonancIA.py"]
+CMD ["python", "app.py"]
