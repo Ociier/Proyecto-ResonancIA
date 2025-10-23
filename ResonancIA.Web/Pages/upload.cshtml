@@ -1,0 +1,33 @@
+﻿@page
+@model UploadModel
+@{
+    ViewData["Title"] = "ResonancIA – Subir estudios";
+}
+
+<h1>ResonancIA – Subir estudios</h1>
+
+<form method="post" enctype="multipart/form-data">
+    <input type="file"
+           name="Files"
+           multiple
+           accept=".dcm,.nii,.nii.gz,.tga,.png,.jpg,.jpeg" />
+    <button type="submit">Subir y predecir</button>
+</form>
+
+@if (Model.Results?.Any() == true)
+{
+<h2>Resultados</h2>
+<ul>
+    @foreach (var r in Model.Results)
+        {
+    <li>
+        <strong>@r.FileName</strong> → @r.Prediction
+    </li>
+        }
+</ul>
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.Error))
+{
+<p style="color:crimson"><strong>Error:</strong> @Model.Error</p>
+}
