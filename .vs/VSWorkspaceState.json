@@ -1,11 +1,11 @@
 {
   "ExpandedNodes": [
     "",
+    "\\.venv",
     "\\assets",
     "\\Modelo",
     "\\Proyecto_ResonancIA",
     "\\uploaded_files"
   ],
-  "SelectedNode": "\\Proyecto_ResonancIA\\rxconfig.py",
   "PreviewInSolutionExplorer": false
 }
