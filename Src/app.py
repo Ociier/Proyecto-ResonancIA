@@ -24,35 +24,6 @@ CLASS_LABELS = [
     "Very Mild Alzheimer's Disease"
 ]
 
-class AlzheimerCNN(nn.Module):
-    def __init__(self):
-        super(AlzheimerCNN, self).__init__()
-        self.conv_layers = nn.Sequential(
-            nn.Conv2d(3, 16, kernel_size=3, stride=1, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(2, 2),
-
-            nn.Conv2d(16, 32, kernel_size=3, stride=1, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(2, 2),
-
-            nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(2, 2)
-        )
-        self.fc_layers = nn.Sequential(
-            nn.Linear(64 * 28 * 28, 128),
-            nn.ReLU(),
-            nn.Dropout(0.5),
-            nn.Linear(128, 4)  # 4 classes
-        )
-
-    def forward(self, x):
-        x = self.conv_layers(x)
-        x = x.view(x.size(0), -1)
-        x = self.fc_layers(x)
-        return x
-
 try:
     # Load model
     model = EfficientNet.from_pretrained('efficientnet-b0', num_classes=4)
@@ -65,7 +36,7 @@ except FileNotFoundError:
     model_loaded = False
 
 try:
-    model1 = AlzheimerCNN()
+    model1 = models.resnet50(pretrained=False)
     model1.load_state_dict(torch.load(os.path.join(MODEL_DIR, "alzheimer_cnn_model.pth"), map_location=torch.device('cpu')))
     model1.eval()
     model_loaded = True
