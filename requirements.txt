@@ -1,26 +1,17 @@
-# Core web frameworks
 flask==2.2.5
 flask-cors==4.0.0
 streamlit==1.31.1
-
-# Deep learning
-torch==2.1.0
-torchvision==0.16.0
+torch==2.5.1
+torchvision==0.20.1
 efficientnet-pytorch==0.7.1
 tqdm==4.66.1
-
-# Image handling
 Pillow==10.1.0
-
-# MRI and DICOM handling
 pydicom==2.4.4
 pylibjpeg==2.0.1
 pylibjpeg-libjpeg==2.2.0
 pylibjpeg-openjpeg==2.3.0
 nibabel==5.2.1
-
-# Data science utilities
-numpy==1.23.5
+numpy==1.26.4
 matplotlib==3.8.0
 scikit-learn==1.3.1
 seaborn==0.13.0
