@@ -35,9 +35,13 @@ except FileNotFoundError:
     st.error(f"Model file not found. Please check the path.")
     model_loaded = False
 
+
 try:
     model1 = models.resnet50(pretrained=False)
+    num_ftrs = model1.fc.in_features
+    model1.fc = nn.Linear(num_ftrs, 4) 
     model1.load_state_dict(torch.load(os.path.join(MODEL_DIR, "alzheimer_cnn_model.pth"), map_location=torch.device('cpu')), strict=False)
+    model1.eval()
     st.success("Modelo ResNet Cargado")
 except Exception as e:
     st.error(f"Error loading model: {e}")
