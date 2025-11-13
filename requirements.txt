@@ -1,5 +1,5 @@
 streamlit==1.31.1
-torch==2.5.1
+torch==2.6.0
 torchvision==0.21.0
 efficientnet-pytorch==0.7.1
 nibabel==5.2.1
