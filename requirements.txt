@@ -5,7 +5,7 @@ torch==2.5.1
 torchvision==0.21.0
 efficientnet-pytorch==0.7.1
 tqdm==4.66.1
-Pillow==10.1.0
+Pillow==10.3.0
 pydicom==2.4.4
 pylibjpeg==2.0.1
 pylibjpeg-libjpeg==2.2.0
