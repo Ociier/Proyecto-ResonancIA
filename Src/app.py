@@ -37,9 +37,7 @@ except FileNotFoundError:
 
 try:
     model1 = models.resnet50(pretrained=False)
-    model1.load_state_dict(torch.load(os.path.join(MODEL_DIR, "alzheimer_cnn_model.pth"), map_location=torch.device('cpu')))
-    model1.eval()
-    model_loaded = True
+    model1.load_state_dict(torch.load(os.path.join(MODEL_DIR, "alzheimer_cnn_model.pth"), map_location=torch.device('cpu')), , strict=False)
     st.success("Modelo CNN Cargado")
 except Exception as e:
     st.error(f"Error loading model: {e}")
@@ -70,7 +68,7 @@ st.write('Por favor, carga una imagen MRI.')
 
 # Load image
 uploaded_file = st.file_uploader("Elegir una imagen MRI", type=["jpg", "jpeg"])
-if uploaded_file is not None and model_loaded:
+if uploaded_file is not None:
     image = Image.open(uploaded_file).convert('RGB')
     st.image(image, caption='MRI Cargado.', use_column_width=True)
     st.write("Clasificando...")
@@ -80,6 +78,6 @@ if uploaded_file is not None and model_loaded:
     labels = ['Mild AD', 'Moderate AD', 'Non-Demented', 'Very Mild AD']
     st.markdown("### Resultados de los modelos")
     st.table({
-        "Model": ["Modelo CNN", "EfficientNet"],
+        "Model": ["ResNet", "EfficientNet"],
         "Prediction": [labels[label1], labels[label2]],
     })
