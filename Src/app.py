@@ -37,8 +37,8 @@ except FileNotFoundError:
 
 try:
     model1 = models.resnet50(pretrained=False)
-    model1.load_state_dict(torch.load(os.path.join(MODEL_DIR, "alzheimer_cnn_model.pth"), map_location=torch.device('cpu')), , strict=False)
-    st.success("Modelo CNN Cargado")
+    model1.load_state_dict(torch.load(os.path.join(MODEL_DIR, "alzheimer_cnn_model.pth"), map_location=torch.device('cpu')), strict=False)
+    st.success("Modelo ResNet Cargado")
 except Exception as e:
     st.error(f"Error loading model: {e}")
     model_loaded = False
