@@ -1,8 +1,8 @@
 flask==2.2.5
 flask-cors==4.0.0
 streamlit==1.31.1
-torch==2.5.1
-torchvision==0.20.1
+torch==2.2.0
+torchvision==0.17.0
 efficientnet-pytorch==0.7.1
 tqdm==4.66.1
 Pillow==10.1.0
