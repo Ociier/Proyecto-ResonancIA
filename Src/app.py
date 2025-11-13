@@ -56,17 +56,17 @@ class AlzheimerCNN(nn.Module):
 try:
     # Load model
     model = EfficientNet.from_pretrained('efficientnet-b0', num_classes=4)
-    model.load_state_dict(torch.load(MODEL_PATH, map_location=torch.device('cpu')))
+    model.load_state_dict(torch.load(os.path.join(MODEL_DIR, "alzheimer_efficientnet_model.pth"), map_location=torch.device('cpu')))
     model.eval()
     model_loaded = True
     st.success("Modelo EfficientNet Cargado")
 except FileNotFoundError:
-    st.error(f"Model file not found at {MODEL_PATH}. Please check the path.")
+    st.error(f"Model file not found. Please check the path.")
     model_loaded = False
 
 try:
     model1 = AlzheimerCNN()
-    model1.load_state_dict(torch.load(MODEL_PATH, map_location=torch.device('cpu')))
+    model1.load_state_dict(torch.load(os.path.join(MODEL_DIR, "alzheimer_cnn_model.pth"), map_location=torch.device('cpu')))
     model1.eval()
     model_loaded = True
     st.success("Modelo CNN Cargado")
