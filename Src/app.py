@@ -125,11 +125,6 @@ if uploaded_file is not None:
     st.table({
         "Model": ["ResNet", "EfficientNet", "DenseNet"],
         "Prediction": [labels[label1], labels[label2], labels[label3]],
-        "Confianza (%)": [
-            round(conf_resnet * 100, 2),
-            round(conf_eff * 100, 2),
-            round(conf_dense * 100, 2)
-        ]
     })
     st.markdown("## Métricas Detalladas por Modelo")
     VAL_DIR = os.path.join(MODEL_DIR, "Validation")
