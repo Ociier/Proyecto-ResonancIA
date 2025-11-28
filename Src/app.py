@@ -25,6 +25,11 @@ CLASS_LABELS = [
     "Very Mild Alzheimer's Disease"
 ]
 
+SHORT_LABELS = ['Mild AD', 'Moderate AD', 'Non-Demented', 'Very Mild AD']
+
+if "prediction_history" not in st.session_state:
+    st.session_state.prediction_history = []
+
 try:
     # Load model
     model = EfficientNet.from_pretrained('efficientnet-b0', num_classes=4)
@@ -108,24 +113,43 @@ def plot_confusion_matrix(cm, class_names):
     plt.title("Confusion Matrix")
     st.pyplot(fig)
 
-st.write('Por favor, carga una imagen MRI.')
+tabs = st.tabs(["Clasificación", "Validación de Modelos"])
+
+with tabs[0]:
+
+    st.write('Por favor, carga una imagen MRI.')
 
 # Load image
 uploaded_file = st.file_uploader("Elegir una imagen MRI", type=["jpg", "jpeg"])
 if uploaded_file is not None:
     image = Image.open(uploaded_file).convert('RGB')
     st.image(image, caption='MRI Cargado.', use_column_width=True)
-    st.write("Clasificando...")
+
+    st.subheader("Predicciones")
     tensor = preprocess(image)
     label1, conf1, probs1 = predict(model1, tensor)
     label2, conf2, probs2 = predict(model, tensor)
     label3, conf3, probs3 = predict(densenet , tensor)
     labels = ['Mild AD', 'Moderate AD', 'Non-Demented', 'Very Mild AD']
-    st.markdown("### Resultados de los modelos")
     st.table({
         "Model": ["ResNet", "EfficientNet", "DenseNet"],
         "Prediction": [labels[label1], labels[label2], labels[label3]],
     })
+    st.markdown("---")
+        st.subheader("Validación Manual")
+
+    correct_labels = labels
+    true_label = st.selectbox("Selecciona el diagnóstico real:", correct_labels)
+    
+    if st.button("Guardar Validación"):
+            for model_name, (label, _) in preds.items():
+                st.session_state.prediction_history.append({
+                    "model": model_name,
+                    "predicted": SHORT_LABELS[label],
+                    "true": true_label
+                })
+            st.success("Guardado correctamente")
+
     st.markdown("## Métricas Detalladas por Modelo")
     VAL_DIR = os.path.join(MODEL_DIR, "Validation")
     val_transform = transforms.Compose([
