@@ -113,7 +113,7 @@ def plot_confusion_matrix(cm, class_names):
     plt.title("Confusion Matrix")
     st.pyplot(fig)
 
-tabs = st.tabs(["Clasificación", "Validación de Modelos"])
+tabs = st.tabs(["Clasificación", "Histórico Predicciones", "Validación de Modelos"])
 
 with tabs[0]:
 
@@ -136,7 +136,7 @@ if uploaded_file is not None:
         "Prediction": [labels[label1], labels[label2], labels[label3]],
     })
     st.markdown("---")
-        st.subheader("Validación Manual")
+    st.subheader("Validación Manual")
 
     correct_labels = labels
     true_label = st.selectbox("Selecciona el diagnóstico real:", correct_labels)
@@ -150,6 +150,9 @@ if uploaded_file is not None:
                 })
             st.success("Guardado correctamente")
 
+
+with tabs[2]:
+    st.subheader("Validación de Modelo")
     st.markdown("## Métricas Detalladas por Modelo")
     VAL_DIR = os.path.join(MODEL_DIR, "Validation")
     val_transform = transforms.Compose([
