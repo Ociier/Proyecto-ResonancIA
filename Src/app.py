@@ -150,7 +150,7 @@ with tabs[0]:
         true_label = st.selectbox("Selecciona el diagnóstico real:", correct_labels)
         
         if st.button("Guardar Validación"):
-                for model_name, (label) in preds.items():
+                for model_name, label in preds.items():
                     st.session_state.prediction_history.append({
                         "model": model_name,
                         "predicted": labels[label],
