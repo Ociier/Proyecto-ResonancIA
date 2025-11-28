@@ -11,6 +11,7 @@ from sklearn.metrics import precision_score, recall_score
 import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 st.title('ResonancIA')
 st.write('Esta aplicación predice Alzheimer a partir de resonancias MRI, comparando tres modelos distintos')
@@ -125,6 +126,12 @@ with tabs[0]:
         image = Image.open(uploaded_file).convert('RGB')
         st.image(image, caption='MRI Cargado.', use_column_width=True)
 
+        preds = {}
+        for name, model in [("ResNet50", resnet), ("EfficientNet", efficientnet), ("DenseNet121", densenet)]:
+            if model:
+                label, _ = predict(model, tensor)
+                preds[name] = (label)
+
         st.subheader("Predicciones")
         tensor = preprocess(image)
         label1, conf1, probs1 = predict(model1, tensor)
@@ -151,7 +158,24 @@ with tabs[0]:
                 st.success("Guardado correctamente")
 
 with tabs[1]:
-    st.subheader("F1-Score")
+    if len(st.session_state.prediction_history) == 0:
+        st.warning("Aún no hay datos validado por usuarios.")
+    else:
+        df = pd.DataFrame(st.session_state.prediction_history)
+        st.dataframe(df)
+
+        st.markdown("### F1 Score por Modelo")
+        for model_name in df["model"].unique():
+            model_df = df[df["model"] == model_name]
+            f1 = f1_score(model_df["true"], model_df["predicted"], average="macro")
+            st.write(f"**{model_name}:** {f1:.3f}")
+
+        st.markdown("### Matriz de Confusión (Global)")
+        cm = confusion_matrix(df["true"], df["predicted"], labels=SHORT_LABELS)
+        fig, ax = plt.subplots()
+        sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", xticklabels=SHORT_LABELS, yticklabels=SHORT_LABELS, ax=ax)
+        plt.xlabel("Predicción"); plt.ylabel("Real")
+        st.pyplot(fig)
 
 with tabs[2]:
     st.subheader("Validación de Modelo")
