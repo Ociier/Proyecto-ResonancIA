@@ -178,7 +178,7 @@ with tabs[1]:
         plt.xlabel("Predicción"); plt.ylabel("Real")
         st.pyplot(fig)
 
-with tabs[2]:
+""" with tabs[2]:
     st.subheader("Validación de Modelo")
     VAL_DIR = os.path.join(MODEL_DIR, "Validation")
     val_transform = transforms.Compose([
@@ -207,3 +207,4 @@ with tabs[2]:
 
         st.markdown("**Matriz de Confusión:**")
         plot_confusion_matrix(cm, CLASS_LABELS)
+ """
