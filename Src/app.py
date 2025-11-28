@@ -127,11 +127,11 @@ with tabs[0]:
         st.image(image, caption='MRI Cargado.', use_column_width=True)
 
         tensor = preprocess(image)
-        
+
         preds = {}
         for name, model in [("ResNet50", model1), ("EfficientNet", model), ("DenseNet121", densenet)]:
             if model:
-                label, _ = predict(model, tensor)
+                label= predict(model, tensor)
                 preds[name] = (label)
 
         st.subheader("Predicciones")
@@ -150,7 +150,7 @@ with tabs[0]:
         true_label = st.selectbox("Selecciona el diagnóstico real:", correct_labels)
         
         if st.button("Guardar Validación"):
-                for model_name, (label, _) in preds.items():
+                for model_name, (label) in preds.items():
                     st.session_state.prediction_history.append({
                         "model": model_name,
                         "predicted": labels[label],
