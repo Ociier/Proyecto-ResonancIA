@@ -126,6 +126,8 @@ with tabs[0]:
         image = Image.open(uploaded_file).convert('RGB')
         st.image(image, caption='MRI Cargado.', use_column_width=True)
 
+        tensor = preprocess(image)
+        
         preds = {}
         for name, model in [("ResNet50", model1), ("EfficientNet", model), ("DenseNet121", densenet)]:
             if model:
@@ -133,7 +135,6 @@ with tabs[0]:
                 preds[name] = (label)
 
         st.subheader("Predicciones")
-        tensor = preprocess(image)
         label1, conf1, probs1 = predict(model1, tensor)
         label2, conf2, probs2 = predict(model, tensor)
         label3, conf3, probs3 = predict(densenet , tensor)
