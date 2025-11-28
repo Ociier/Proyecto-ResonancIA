@@ -131,7 +131,7 @@ with tabs[0]:
         preds = {}
         for name, model in [("ResNet50", model1), ("EfficientNet", model), ("DenseNet121", densenet)]:
             if model:
-                label= predict(model, tensor)
+                label, _conf, _probs = predict(model, tensor)
                 preds[name] = (label)
 
         st.subheader("Predicciones")
@@ -177,34 +177,3 @@ with tabs[1]:
         sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", xticklabels=SHORT_LABELS, yticklabels=SHORT_LABELS, ax=ax)
         plt.xlabel("Predicción"); plt.ylabel("Real")
         st.pyplot(fig)
-
-""" with tabs[2]:
-    st.subheader("Validación de Modelo")
-    VAL_DIR = os.path.join(MODEL_DIR, "Validation")
-    val_transform = transforms.Compose([
-        transforms.Resize((224, 224)),
-        transforms.ToTensor(),
-        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    ])
-    val_dataset = datasets.ImageFolder(VAL_DIR, transform=val_transform)
-    val_loader = DataLoader(val_dataset, batch_size=16, shuffle=False)
-    models_eval = {
-        "ResNet50": model1,
-        "EfficientNet-B0": model,
-        "DenseNet121": densenet
-    }
-    for name, model_ref in models_eval.items():
-        st.markdown(f"### {name}")
-
-        precision, recall, cm = evaluate_model(model_ref, val_loader, CLASS_LABELS)
-
-        metrics_table = {
-            "Clase": CLASS_LABELS,
-            "Precision": np.round(precision, 3),
-            "Recall": np.round(recall, 3)
-        }
-        st.table(metrics_table)
-
-        st.markdown("**Matriz de Confusión:**")
-        plot_confusion_matrix(cm, CLASS_LABELS)
- """
