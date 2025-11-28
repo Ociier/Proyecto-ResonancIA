@@ -127,7 +127,7 @@ with tabs[0]:
         st.image(image, caption='MRI Cargado.', use_column_width=True)
 
         preds = {}
-        for name, model in [("ResNet50", resnet), ("EfficientNet", efficientnet), ("DenseNet121", densenet)]:
+        for name, model in [("ResNet50", model1), ("EfficientNet", model), ("DenseNet121", densenet)]:
             if model:
                 label, _ = predict(model, tensor)
                 preds[name] = (label)
@@ -152,7 +152,7 @@ with tabs[0]:
                 for model_name, (label, _) in preds.items():
                     st.session_state.prediction_history.append({
                         "model": model_name,
-                        "predicted": SHORT_LABELS[label],
+                        "predicted": labels[label],
                         "true": true_label
                     })
                 st.success("Guardado correctamente")
